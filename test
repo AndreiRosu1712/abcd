@@ -1,0 +1,235 @@
+module modulo #(
+    parameter p_width = 1
+) (
+    output wire [(p_width):0] o_w_mod,
+    input wire [p_width-1:0] i_w_a,
+    input wire [p_width-1:0] i_w_b
+);
+    assign o_w_mod = i_w_a % i_w_b ;
+
+endmodule
+
+module substract #(
+    parameter p_width = 1
+) (
+    output wire [(p_width):0] o_w_sub,
+    input wire [p_width-1:0] i_w_a,
+    input wire [p_width-1:0] i_w_b
+);
+    //TODO 1: Implement half-adder
+    assign o_w_sub = i_w_a - i_w_b;
+
+endmodule
+
+module divide #(
+    parameter p_width = 1
+) (
+    output wire [p_width:0] o_w_div,
+    input wire [p_width-1:0] i_w_a,
+    input wire [p_width-1:0] i_w_b
+);
+    assign o_w_div = i_w_a / i_w_b;
+
+endmodule
+
+module adder #(
+    parameter p_width = 1
+) (
+    output wire [(p_width):0] o_w_s,
+    input wire [p_width-1:0] i_w_a,
+    input wire [p_width-1:0] i_w_b
+);
+    //TODO 1: Implement half-adder
+    assign o_w_s = i_w_a + i_w_b;
+
+endmodule
+
+module alu #(
+    parameter p_width = 4
+) (
+    output reg [((p_width)):0] o_w_out,  // S-a schimbat tipul la reg pentru a permite atribuiri în always
+    input wire [(p_width-1):0] i_w_a,
+    input wire [(p_width-1):0] i_w_b,
+    input wire [1:0] i_w_sel
+);
+
+    wire [p_width:0] l_w_s;                       // Rezultatul adunării
+    wire [p_width:0] l_w_sub;                   // Rezultatul scăderii
+    wire [p_width:0] l_w_mod;                   // Rezultatul modulo
+    wire [p_width:0] l_w_div;                   // Rezultatul împărțirii
+
+    // Instanțierea modulului adder
+    adder #( .p_width(p_width) ) l_m_adder (
+        .o_w_s(l_w_s),
+        .i_w_a(i_w_a),
+        .i_w_b(i_w_b)
+    );
+
+    // Instanțierea modulului subtractor
+    substract #( .p_width(p_width) ) l_m_subtractor (
+        .o_w_sub(l_w_sub),
+        .i_w_a(i_w_a),
+        .i_w_b(i_w_b)
+    );
+
+    // Instanțierea modulului modulo
+    modulo #( .p_width(p_width) ) l_m_modulo (
+        .o_w_mod(l_w_mod),
+        .i_w_a(i_w_a),
+        .i_w_b(i_w_b)
+    );
+
+    // Instanțierea modulului divide
+    divide #( .p_width(p_width) ) l_m_divide (
+        .o_w_div(l_w_div),
+        .i_w_a(i_w_a),
+        .i_w_b(i_w_b)
+    );
+
+    // Selectarea operației pe baza lui i_w_sel
+    always @(*) begin
+        case (i_w_sel)
+            2'b00: o_w_out = l_w_s[p_width-1:0]; // Adunare
+            2'b01: o_w_out = l_w_sub;            // Scădere
+            2'b10: o_w_out = l_w_mod;            // Modulo
+            2'b11: o_w_out = l_w_div;            // Împărțire
+            default: o_w_out = {p_width{1'b0}};  // Default: ieșire zero
+        endcase
+    end
+
+endmodule
+
+module test();
+  parameter p_width=4;
+  wire [4:0]out;
+  reg [3:0]a;
+  reg [3:0]b;
+  reg [1:0]sel;
+  alu #(.p_width(p_width)) t(
+    .o_w_out(out),
+    .i_w_a(a),
+    .i_w_b(b),
+    .i_w_sel(sel)
+  );
+
+  initial begin
+    a=3; b=4; sel=1; #10 $display("a=%d b=%d sel=%d out=%0d",a,b,sel, out);
+    end
+endmodule
+
+===========================================================================================
+
+module led7(
+    output wire o_w_ca,
+    output wire o_w_cb,
+    output wire o_w_cc,
+    output wire o_w_cd,
+    output wire o_w_ce,
+    output wire o_w_cf,
+    output wire o_w_cg,     
+    input  wire [3:0] i_w_in
+
+);
+
+    reg [6:0] l_r_7seg;
+
+    always@(*) begin
+        case(i_w_in)
+            4'd0: l_r_7seg = 7'b100_0000;
+            4'd1: l_r_7seg = 7'b111_1001;
+            4'd2: l_r_7seg = 7'b010_0100;
+            4'd3: l_r_7seg = 7'b011_0000;
+            4'd4: l_r_7seg = 7'b001_1001;
+            4'd5: l_r_7seg = 7'b001_0010;
+            4'd6: l_r_7seg = 7'b000_0010;
+            4'd7: l_r_7seg = 7'b111_1000;
+            4'd8: l_r_7seg = 7'b000_0000;
+            4'd9: l_r_7seg = 7'b001_1000;
+            default: l_r_7seg = 7'b100_0000; //default case -> place "-"
+        endcase
+    end
+
+    assign o_w_ca = l_r_7seg[0];
+    assign o_w_cb = l_r_7seg[1];
+    assign o_w_cc = l_r_7seg[2];
+    assign o_w_cd = l_r_7seg[3];
+    assign o_w_ce = l_r_7seg[4];
+    assign o_w_cf = l_r_7seg[5];
+    assign o_w_cg = l_r_7seg[6];
+    
+endmodule
+
+module testare();
+    reg [3:0] i_w_in;
+    wire a, b, c, d, e, f, g;
+
+    led7 led(
+        .o_w_ca(a),
+        .o_w_cb(b),
+        .o_w_cc(c),
+        .o_w_cd(d),
+        .o_w_ce(e),
+        .o_w_cf(f),
+        .o_w_cg(g),
+        .i_w_in(i_w_in)
+    );
+
+    integer n=1234;
+    integer digit;
+
+    initial begin
+    
+        for(digit = 0; digit<=3; digit = digit + 1 ) begin
+            i_w_in = (n/(10 ** digit))%10;
+            #10;
+            $display("Digit %0d %0d: %b %b %b %b %b %b %b", digit, i_w_in, g, f, e, d, c, b, a);
+        end
+        $finish;
+    end
+endmodule
+
+=============================================================================================================
+
+module Ex1 (
+    input wire a,
+    input wire b,
+    input wire c,
+    output wire f
+);
+    // Implementarea expresiei pentru f
+    assign f = (~a & ~b & ~c) | (a & ~b & ~c) | (a & ~b & c) | (a & b & ~c);
+
+endmodule
+
+module testare;
+    reg a, b, c;
+    wire f;
+
+    // Instanțierea modulului Ex1
+    Ex1 t(
+        .a(a),
+        .b(b),
+        .c(c),
+        .f(f)
+    );
+
+    // Bloc initial pentru testarea tuturor combinațiilor
+    initial begin
+        $display("a b c | f"); // Antet pentru afișare
+        $display("---------");
+
+        // Testare toate combinațiile de intrare
+        a = 0; b = 0; c = 0; #10 $display("%b %b %b | %b", a, b, c, f);
+        a = 0; b = 0; c = 1; #10 $display("%b %b %b | %b", a, b, c, f);
+        a = 0; b = 1; c = 0; #10 $display("%b %b %b | %b", a, b, c, f);
+        a = 0; b = 1; c = 1; #10 $display("%b %b %b | %b", a, b, c, f);
+        a = 1; b = 0; c = 0; #10 $display("%b %b %b | %b", a, b, c, f);
+        a = 1; b = 0; c = 1; #10 $display("%b %b %b | %b", a, b, c, f);
+        a = 1; b = 1; c = 0; #10 $display("%b %b %b | %b", a, b, c, f);
+        a = 1; b = 1; c = 1; #10 $display("%b %b %b | %b", a, b, c, f);
+
+        $finish; // Termină simularea
+    end
+endmodule
+
+
